@@ -36,6 +36,50 @@ export const getDetailBlog = async (req: Request, res: Response) => {
     }
 };
 
+export const getBlogsByAuthor = async (req: Request, res: Response) => {
+    try {
+        const { authorId } = req.params;
+        const blog = await prisma.blog.findMany({
+            where: {
+                authorId: authorId
+            }
+        });
+        if (!blog) {
+            res.status(404).json(errorResponse(404, 'not found', "Data Not Found", "Blog Not Found"))
+            return;
+        };
+        res.status(200).json(successResponse(blog));
+    } catch (error) {
+        const errMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        console.error(errMessage)
+        res.status(500).json(errorResponse(500, 'Internal Server Error', error, errMessage))
+    }
+};
+
+export const getLatestBlogs = async (req: Request, res: Response) => {
+    try {
+    const limit = Number(req.query.limit) || 1;
+
+    const blogs = await prisma.blog.findMany({
+    orderBy: {
+        createdAt: 'desc'
+    },
+    take: limit
+    });
+
+    if (!blogs || blogs.length === 0) {
+    res.status(404).json(errorResponse(404, 'not found', "Data Not Found", "Blog Not Found"));
+    return;
+    }
+
+    res.status(200).json(successResponse(blogs));
+} catch (error) {
+    const errMessage = error instanceof Error ? error.message : "An unknown error occurred";
+    console.error(errMessage);
+    res.status(500).json(errorResponse(500, 'Internal Server Error', error, errMessage));
+}
+};
+
 export const postBlog = async  (req: Request, res: Response) => {
     try {
         const {authorId, title, content, image, createdBy, type} = req.body;
